@@ -1,0 +1,44 @@
+== Welcome to pyopengeiger
+
+== Application details
+
+Upload your opengeiger radiation measurement to ThingSpeak and Pachube streams
+
+== Requirements
+
+* python 2.6
+
+* pyusb
+
+== Setup Project
+Install libusb library
+  > brew install libusb (on mac)
+  > apt-get install libusb-dev (on ubuntu)
+
+Install pyusb module
+  > pip install pyusb
+
+Create the configuration file
+  > cp .pyopengeiger_sample .pyopengeiger
+Then update the API Keys and FeedID
+
+== Usage
+
+Before starting the tool make sure the opengeiger is connected with the USB cable.
+
+Usage:
+  > sudo python pyopengeiger.py
+  2012-02-28 15:17:20 - 16 CPM 0.107 µSv/h
+  2012-02-28 15:18:21 - 16 CPM 0.107 µSv/h
+  2012-02-28 15:19:22 - 17 CPM 0.113 µSv/h
+  2012-02-28 15:20:23 - 17 CPM 0.113 µSv/h
+  ...
+
+== Related links
+* http://opengeiger.com/
+* http://www.thingspeak.com/
+* http://www.pachube.com/
+
+== License
+The pyopengeiger tools is released under the CC0 license. See CC0.txt for details.
+

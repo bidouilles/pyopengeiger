@@ -35,8 +35,6 @@ Usage:
   ...
 
 == Sample channels
-[https://api.pachube.com/v2/feeds/49939/datastreams/1.png?width=730&height=250&colour=%23f15a24&duration=3hours&legend=uSv%2Fh&show_axis_labels=true&detailed_grid=true&scale=datastream&timezone=Tokyo]
-
 * https://www.thingspeak.com/channels/1897
 * https://pachube.com/feeds/49939
 

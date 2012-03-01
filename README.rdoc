@@ -10,6 +10,8 @@ Upload radiation measurement from your opengeiger device to ThingSpeak and Pachu
 
 * pyusb
 
+* rrdtool (optional)
+
 == Setup Project
 Install libusb library
   > brew install libusb (on mac)

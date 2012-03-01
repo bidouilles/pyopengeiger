@@ -61,13 +61,13 @@ create = """%s create %s --step '60' 'DS:cpm:GAUGE:120:0:10000' 'DS:microsievert
 
 update = "%s update %s N:%d:%.3f"
 
-graph = """%s graph %s --start -1h --end now --width=620 --height=200 --lower-limit 0 --vertical-label "CPM" DEF:average1=%s:cpm:AVERAGE 'DEF:average1wk=%s:cpm:AVERAGE:start=-1w' DEF:average2=%s:microsievert:AVERAGE LINE2:average1#00FF00:'CPM Avg'"""
+graph = """%s graph %s --start -1h --end now --width=620 --height=200 --vertical-label "CPM" DEF:average1=%s:cpm:AVERAGE 'DEF:average1wk=%s:cpm:AVERAGE:start=-1w' DEF:average2=%s:microsievert:AVERAGE LINE2:average1#00FF00:'CPM'"""
 
-graphPrints = """'GPRINT:average1:LAST:Last CPM\: %2.0lf' 'GPRINT:average2:LAST:Last uSv/h\: %2.3lf\j'"""
+graphPrints = """'GPRINT:average1:MIN:Min\: %2.0lf CPM' 'GPRINT:average1:MAX:Max\: %2.0lf CPM' 'GPRINT:average1:LAST:Last\: %2.0lf CPM' 'GPRINT:average2:LAST:Last\: %2.3lf uSv/h\j'"""
 
 graphTrend = """'VDEF:D2=average1,LSLSLOPE' 'VDEF:H2=average1,LSLINT' 'CDEF:avg1=average1,POP,D2,COUNT,*,H2,+' 'LINE2:avg1#FFBB00:Trend since 1h:dashes=10'"""
 
-graphTrend1wk = """'VDEF:D3=average1wk,LSLSLOPE' 'VDEF:H3=average1wk,LSLINT' 'CDEF:avg1wk=average1wk,POP,D3,COUNT,*,H3,+' 'LINE2:avg1wk#0077FF'"""
+graphTrend1wk = """'VDEF:D3=average1wk,LSLSLOPE' 'VDEF:H3=average1wk,LSLINT' 'CDEF:avg1wk=average1wk,POP,D3,COUNT,*,H3,+' 'LINE:avg1wk#0077FF:Trend since 1w:dashes=10'"""
 
 def UpdateRRDTool(rrdtool, rrddb, rrdpng, field1, field2):
    cmd = update % (rrdtool, rrddb, field1, field2)
@@ -76,6 +76,7 @@ def UpdateRRDTool(rrdtool, rrddb, rrdpng, field1, field2):
    cmd = graph % (rrdtool, rrdpng, rrddb, rrddb, rrddb)
    cmd += " "+graphPrints
    cmd += " "+graphTrend
+   cmd += " "+graphTrend1wk
    subprocess.call(cmd, shell=True)
 
 # -----------------------------------------------------------------------------

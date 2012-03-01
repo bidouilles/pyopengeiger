@@ -59,7 +59,7 @@ def UpdatePachube(feedid, apikey, field1, field2):
 #
 create = """%s create %s --step '60' 'DS:cpm:GAUGE:120:0:10000' 'DS:microsievert:GAUGE:120:0:100' 'RRA:LAST:0.5:1:288' 'RRA:AVERAGE:0.5:1:2880' 'RRA:AVERAGE:0.5:10:4464' 'RRA:MIN:0.5:10:4464' 'RRA:MAX:0.5:10:4464'"""
 
-update = "%s update opengeiger.rrd N:%d:%.3f"
+update = "%s update %s N:%d:%.3f"
 
 graph = """%s graph %s --start -1h --end now --width=620 --height=200 --lower-limit 0 --vertical-label "CPM" DEF:average1=%s:cpm:AVERAGE 'DEF:average1wk=%s:cpm:AVERAGE:start=-1w' DEF:average2=%s:microsievert:AVERAGE LINE2:average1#00FF00:'CPM Avg'"""
 
@@ -70,7 +70,7 @@ graphTrend = """'VDEF:D2=average1,LSLSLOPE' 'VDEF:H2=average1,LSLINT' 'CDEF:avg1
 graphTrend1wk = """'VDEF:D3=average1wk,LSLSLOPE' 'VDEF:H3=average1wk,LSLINT' 'CDEF:avg1wk=average1wk,POP,D3,COUNT,*,H3,+' 'LINE2:avg1wk#0077FF'"""
 
 def UpdateRRDTool(rrdtool, rrddb, rrdpng, field1, field2):
-   cmd = update % (rrdtool, field1, field2)
+   cmd = update % (rrdtool, rrddb, field1, field2)
    subprocess.call(cmd, shell=True)
 
    cmd = graph % (rrdtool, rrdpng, rrddb, rrddb, rrddb)

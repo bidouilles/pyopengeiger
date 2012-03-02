@@ -30,6 +30,14 @@ GM01A_RequestGetIntervalCount = 0x03
 # geiger tube convertion factor
 usvh_per_cpm = 150.0 # Cs-137 1uSv/h (25cps/mR/h)
 
+# CSV backup file update
+def UpdateCSVBackup(field1, field2):
+   # Write to file
+   receiveTime = time.strftime('%Y-%m-%d %H:%M',time.localtime()) 
+   csvfile = open('opengeiger.csv', 'a')
+   csvfile.write("%s,%d,%.3f\n" % (receiveTime, field1, field2))
+   csvfile.close()
+
 # ThingSpeak stream update
 def UpdateThingspeak(apikey, field1, field2):
    params = urllib.urlencode({'field1': field1, 'field2': field2,'key': apikey})
@@ -116,6 +124,8 @@ if __name__ == '__main__':
        # Update streams
        print "%s - %d CPM %0.3f µSv/h" % (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), CPM, usvh)
        try:
+         UpdateCSVBackup(CPM, usvh)
+
          if "thingspeak" in config.sections():
            thingspeakAPIKey = config.get('thingspeak', 'apiKey')
            UpdateThingspeak(thingspeakAPIKey, CPM, usvh)

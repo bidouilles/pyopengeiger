@@ -8,14 +8,21 @@
 # See http://creativecommons.org/publicdomain/zero/1.0/
 # ----------------------------------------------------------------
 
+# pyusb module
 import usb.util
 import usb.legacy
 
+# HTTP modules
 import httplib, urllib, urllib2
+
+# System modules
 import time, datetime
 import ConfigParser
 import subprocess
 import os
+
+# Multiprocess
+from multiprocessing import Pool
 
 # opengeiger usb device information
 ID_VENDOR = 0x20a0
@@ -66,26 +73,27 @@ def UpdatePachube(feedid, apikey, field1, field2):
 # RRDTool
 #
 create = """%s create %s --step '60' 'DS:cpm:GAUGE:120:0:10000' 'DS:microsievert:GAUGE:120:0:100' 'RRA:LAST:0.5:1:288' 'RRA:AVERAGE:0.5:1:2880' 'RRA:AVERAGE:0.5:10:4464' 'RRA:MIN:0.5:10:4464' 'RRA:MAX:0.5:10:4464'"""
-
 update = "%s update %s N:%d:%.3f"
-
-graph = """%s graph %s --start -1h --end now --width=620 --height=200 --vertical-label "CPM" DEF:average1=%s:cpm:AVERAGE 'DEF:average1wk=%s:cpm:AVERAGE:start=-1w' DEF:average2=%s:microsievert:AVERAGE LINE2:average1#00FF00:'CPM'"""
-
+graph = """%s graph %s-%s.png --start -%s --end now --width=620 --height=200 --vertical-label "CPM" DEF:average1=%s:cpm:AVERAGE 'DEF:average1wk=%s:cpm:AVERAGE:start=-1w' DEF:average2=%s:microsievert:AVERAGE LINE2:average1#00FF00:'CPM'"""
 graphPrints = """'GPRINT:average1:MIN:Min\: %2.0lf CPM' 'GPRINT:average1:MAX:Max\: %2.0lf CPM' 'GPRINT:average1:LAST:Last\: %2.0lf CPM' 'GPRINT:average2:LAST:Last\: %2.3lf uSv/h\j'"""
-
-graphTrend = """'VDEF:D2=average1,LSLSLOPE' 'VDEF:H2=average1,LSLINT' 'CDEF:avg1=average1,POP,D2,COUNT,*,H2,+' 'LINE2:avg1#FFBB00:Trend since 1h:dashes=10'"""
-
+graphTrend = """'VDEF:D2=average1,LSLSLOPE' 'VDEF:H2=average1,LSLINT' 'CDEF:avg1=average1,POP,D2,COUNT,*,H2,+' 'LINE2:avg1#FFBB00:Trend since %s:dashes=10'"""
 graphTrend1wk = """'VDEF:D3=average1wk,LSLSLOPE' 'VDEF:H3=average1wk,LSLINT' 'CDEF:avg1wk=average1wk,POP,D3,COUNT,*,H3,+' 'LINE:avg1wk#0077FF:Trend since 1w:dashes=10'"""
+
+def GenerateGraph(rrdtool, rrddb, rrdpng, period):
+   cmd = graph % (rrdtool, rrdpng, period, period, rrddb, rrddb, rrddb)
+   cmd += " "+graphPrints
+   cmd += " "+graphTrend % period
+   cmd += " "+graphTrend1wk
+   subprocess.call(cmd, shell=True)
 
 def UpdateRRDTool(rrdtool, rrddb, rrdpng, field1, field2):
    cmd = update % (rrdtool, rrddb, field1, field2)
    subprocess.call(cmd, shell=True)
 
-   cmd = graph % (rrdtool, rrdpng, rrddb, rrddb, rrddb)
-   cmd += " "+graphPrints
-   cmd += " "+graphTrend
-   cmd += " "+graphTrend1wk
-   subprocess.call(cmd, shell=True)
+   GenerateGraph(rrdtool, rrddb, rrdpng, "1h")
+   GenerateGraph(rrdtool, rrddb, rrdpng, "6h")
+   GenerateGraph(rrdtool, rrddb, rrdpng, "12h")
+   GenerateGraph(rrdtool, rrddb, rrdpng, "1d")
 
 # -----------------------------------------------------------------------------
 # Main
@@ -108,6 +116,9 @@ if __name__ == '__main__':
       if not os.path.exists(rrddb):
         cmd = create % (rrdtool, rrddb)
         subprocess.call(cmd, shell=True)
+
+    # Create the thread pool
+    pool = Pool()
        
     # Start measurements
     while (True):
@@ -128,19 +139,26 @@ if __name__ == '__main__':
 
          if "thingspeak" in config.sections():
            thingspeakAPIKey = config.get('thingspeak', 'apiKey')
-           UpdateThingspeak(thingspeakAPIKey, CPM, usvh)
+           #UpdateThingspeak(thingspeakAPIKey, CPM, usvh)
+           pool.apply_async(UpdateThingspeak, (thingspeakAPIKey, CPM, usvh))
 
          if "pachube" in config.sections():
            pachubeFeedID = config.get('pachube', 'feedID')
            pachubeAPIKey = config.get('pachube', 'apiKey')
-           UpdatePachube(pachubeFeedID, pachubeAPIKey, CPM, usvh)
+           #UpdatePachube(pachubeFeedID, pachubeAPIKey, CPM, usvh)
+           pool.apply_async(UpdatePachube, (pachubeFeedID, pachubeAPIKey, CPM, usvh))
 
          if "rrdtool" in config.sections():
-           UpdateRRDTool(rrdtool, rrddb, rrdpng, CPM, usvh)
+           #UpdateRRDTool(rrdtool, rrddb, rrdpng, CPM, usvh)
+           pool.apply_async(UpdateRRDTool, (rrdtool, rrddb, rrdpng, CPM, usvh))
 
          time.sleep(60)
        except:
          print "Failed to update servers, retry in 1 second ..."
          time.sleep(1)
          pass
+
+    # Wait the pool to be completed
+    pool.close()
+    pool.join()
 

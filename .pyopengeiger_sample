@@ -8,4 +8,4 @@ apiKey=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 #[rrdtool]
 #rrdTool=/usr/local/bin/rrdtool
 #rrdDb=opengeiger.rrd
-#rrdPng=opengeiger.png
+#rrdPng=/home/server/DropBox/Public/data/opengeiger

@@ -4,6 +4,8 @@
 
 Upload radiation measurement from your opengeiger device to ThingSpeak and Pachube data streams
 
+[link:pyopengeiger.png]
+
 == Requirements
 
 * python 2.6
